@@ -10,6 +10,8 @@ from topicgpt.TopicPrompting import TopicPrompting
 from topicgpt.TopicRepresentation import Topic
 from topicgpt.Client import Client
 import topicgpt.TopicRepresentation as TopicRepresentation
+from topicgpt.metrics.intruder_metrics import ADC
+from topicgpt.metrics.other_metrics import ADS
 
 
 embeddings_path= "SavedEmbeddings/embeddings.pkl" #global variable for the path to the embeddings
@@ -65,8 +67,6 @@ class TopicGPT:
             topic_prompting (TopicPrompting, optional): Topic prompting object for formulating prompts. Find the class in the "TopicPrompting/TopicPrompting.py" folder. If None, a topic prompting object with default parameters is used. If an openai model is specified here, it will overwrite the openai_prompting_model argument for topic description.
             verbose (bool, optional): Whether to print detailed information about the process. This can be overridden by arguments in passed objects.
         """
-        
-
 
         # Do some checks on the input arguments
         assert api_key is not None, "You need to provide an OpenAI API key."
@@ -79,7 +79,6 @@ class TopicGPT:
         assert n_topwords_description <= n_topwords, "The number of top words for the topic description needs to be smaller or equal to the number of top words."
 
         self.client = Client(api_key = api_key, azure_endpoint = azure_endpoint)
-
 
         self.n_topics = n_topics
         self.openai_prompting_model = openai_prompting_model
@@ -111,15 +110,32 @@ class TopicGPT:
             assert elem in ["tfidf", "cosine_similarity", "topword_enhancement"], "Invalid topword extraction method. Valid methods are 'tfidf', 'cosine_similarity', and 'topword_enhancement'."
         
         if clusterer is None:
-            self.clusterer = Clustering_and_DimRed(number_clusters_hdbscan = self.n_topics, verbose = self.verbose)
+            self.clusterer = Clustering_and_DimRed(
+                                number_clusters_hdbscan = self.n_topics, 
+                                verbose = self.verbose
+                                )
         else:
             self.n_topics = clusterer.number_clusters_hdbscan
         
         if enhancer is None:
-            self.enhancer = TopwordEnhancement(client = self.client, openai_model = self.openai_prompting_model, max_context_length = self.max_number_of_tokens, corpus_instruction = self.corpus_instruction)
+            self.enhancer = TopwordEnhancement(
+                                client = self.client, 
+                                openai_model = self.openai_prompting_model, 
+                                max_context_length = self.max_number_of_tokens, 
+                                corpus_instruction = self.corpus_instruction
+                                )
 
         if topic_prompting is None:
-            self.topic_prompting = TopicPrompting(topic_lis = [], client = self.client, openai_prompting_model = self.openai_prompting_model,  max_context_length_promting = 16000, enhancer = self.enhancer, openai_embedding_model = self.embedding_model, max_context_length_embedding = self.max_number_of_tokens_embedding, corpus_instruction = corpus_instruction)
+            self.topic_prompting = TopicPrompting(
+                                        topic_lis = [], 
+                                        client = self.client, 
+                                        openai_prompting_model = self.openai_prompting_model,  
+                                        max_context_length_promting = 16000, 
+                                        enhancer = self.enhancer, 
+                                        openai_embedding_model = self.embedding_model, 
+                                        max_context_length_embedding = self.max_number_of_tokens_embedding, 
+                                        corpus_instruction = corpus_instruction
+                                        )
         
         self.extractor = ExtractTopWords()
     
@@ -365,7 +381,6 @@ class TopicGPT:
             path (str, optional): The path to save the embeddings to. Defaults to embeddings_path.
         """
 
-
         assert self.document_embeddings is not None and self.vocab_embeddings is not None, "You need to compute the embeddings first."
 
         # create dictionary if it doesn't exist yet 
@@ -376,3 +391,32 @@ class TopicGPT:
         with open(path, "wb") as f:
             pickle.dump([self.document_embeddings, self.vocab_embeddings], f)
 
+
+    # score funtion
+    def score(
+            self,   
+            n_intruder_docs: int = 5, 
+            n_docs: int = 10, 
+            # corpus: list[str] = None
+    ):
+        assert self.topic_lis is not None, "You need to extract the topics first. (either by fitting the model or extracting_topics"
+
+        self.nintruder_docs = n_intruder_docs
+        self.ndocs = n_docs
+
+        adc = ADC(
+                    n_intruder_docs=self.nintruder_docs, 
+                    n_docs=self.ndocs
+                )
+        adc_score = adc.score(
+                    topics=self.topic_lis, 
+                    new_embeddings=False
+                )
+        
+        ads = ADS()
+        ads_score = ads.score(
+                    topics=self.topic_lis, 
+                    tm=self
+                )
+
+        return dict(Average_Document_Similarity = ads_score, Average_Document_Cohesion = adc_score)

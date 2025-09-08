@@ -9,7 +9,14 @@ class GetEmbeddingsOpenAI:
     This class allows to compute embeddings of text using the OpenAI API.
     """
 
-    def __init__(self, client, azure_config: dict = {}, embedding_model: str = "text-embedding-ada-002", tokenizer: str = None, max_tokens: int = 8191) -> None:
+    def __init__(
+            self, 
+            client, 
+            azure_config: dict = {}, 
+            embedding_model: str = "text-embedding-ada-002", 
+            tokenizer: str = None, 
+            max_tokens: int = 8191
+            ) -> None:
         """
         Constructor of the class.
 
@@ -29,7 +36,10 @@ class GetEmbeddingsOpenAI:
         self.max_tokens = max_tokens
 
     @staticmethod
-    def num_tokens_from_string(string: str, encoding) -> int:
+    def num_tokens_from_string(
+            string: 
+            str, encoding
+            ) -> int:
         """
         Returns the number of tokens in a text string.
 
@@ -43,7 +53,10 @@ class GetEmbeddingsOpenAI:
         num_tokens = len(encoding.encode(string))
         return num_tokens
 
-    def compute_number_of_tokens(self, corpus: list[str]) -> int:
+    def compute_number_of_tokens(
+            self, 
+            corpus: list[str]
+            ) -> int:
         """
         Computes the total number of tokens needed to embed the corpus.
 
@@ -103,14 +116,13 @@ class GetEmbeddingsOpenAI:
         else:
             tokenizer = tiktoken.get_encoding(self.tokenizer_str)
 
-
         split_text = []
         for document in tqdm(text):
             if self.num_tokens_from_string(document, tokenizer) > self.max_tokens:
                 split_text.append(self.split_doc(document))
             else:
                 split_text.append([document])
-        return split_text   
+        return split_text
 
     def make_api_call(self, text: str):
         """
@@ -126,9 +138,11 @@ class GetEmbeddingsOpenAI:
         response = self.client.embeddings.create(input = [text], model = self.embedding_model)
         return response
 
-
-
-    def get_embeddings_doc_split(self, corpus: list[list[str]], n_tries=3) -> list[dict]:
+    def get_embeddings_doc_split(
+                            self, 
+                            corpus: list[list[str]], 
+                            n_tries=3
+                            ) -> list[dict]:
         """
         Computes the embeddings of a corpus for split documents.
 
@@ -138,7 +152,8 @@ class GetEmbeddingsOpenAI:
             n_tries (int, optional): Number of tries to make an API call (default is 3).
 
         Returns:
-            List[dict]: A list of dictionaries, where each dictionary contains the embedding of the document, the text of the document, and a list of errors that occurred during the embedding process.
+            List[dict]: A list of dictionaries, where each dictionary contains the embedding of the document, the text of the document, 
+            and a list of errors that occurred during the embedding process.
         """
 
         api_res_list = [] 

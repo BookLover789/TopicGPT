@@ -151,6 +151,13 @@ class ExtractTopWords:
                 doc_frequency[word_lower].add(doc_id)
 
         total_words = sum(word_counter.values())
+        
+        # If no tokens survived the filtering, return an empty vocabulary early
+        if total_words == 0 or len(word_counter) == 0:
+            if verbose:
+                print("Warning: no tokens remained after preprocessing -> returning empty vocab.")
+            return []
+
         freq_counter = {word: count / total_words for word, count in word_counter.items()}
 
         # print most common words and their frequencies

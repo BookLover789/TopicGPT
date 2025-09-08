@@ -230,20 +230,19 @@ class Clustering_and_DimRed():
 
         # make plot quadratic
         fig.update_layout(
-        autosize=False,
-        width=1500,
-        height=1500,
-        margin=dict(
-            l=50,   
-            r=50,
-            b=100,
-            t=100,
-            pad=4
-        )
+            autosize=False,
+            width=1500,
+            height=1500,
+            margin=dict(
+                l=50,   
+                r=50,
+                b=100,
+                t=100,
+                pad=4
+            )
         )
         # set title 
         fig.update_layout(title_text='UMAP projection of the document embeddings', title_x=0.5)
-
         
         # show plot
         fig.show()
