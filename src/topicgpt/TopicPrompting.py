@@ -4,7 +4,6 @@ import numpy as np
 import json
 import tiktoken
 import openai
-from openai import OpenAI
 import re
 import sklearn
 import hdbscan
@@ -38,19 +37,19 @@ class TopicPrompting:
     """
 
     def __init__(self, 
-             topic_lis: list[Topic], 
-             client,
-             openai_prompting_model: str = "gpt-3.5-turbo-16k", 
-             max_context_length_promting: int = 16000, 
-             openai_model_temperature_prompting: float = 0.5,
-             openai_embedding_model: str = "text-embedding-ada-002",
-             max_context_length_embedding: int = 8191, 
-             basic_model_instruction: str = basic_model_instruction,
-             corpus_instruction: str = "",
-             enhancer: TopwordEnhancement = None,
-             vocab: list = None,
-             vocab_embeddings: dict = None,
-             random_state: int = 42):
+            topic_lis: list[Topic], 
+            client,
+            openai_prompting_model: str = "gpt-3.5-turbo-16k", 
+            max_context_length_promting: int = 16000, 
+            openai_model_temperature_prompting: float = 0.5,
+            openai_embedding_model: str = "text-embedding-ada-002",
+            max_context_length_embedding: int = 8191, 
+            basic_model_instruction: str = basic_model_instruction,
+            corpus_instruction: str = "",
+            enhancer: TopwordEnhancement = None,
+            vocab: list = None,
+            vocab_embeddings: dict = None,
+            random_state: int = 42):
         """
         Initialize the object.
 

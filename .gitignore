@@ -12,3 +12,4 @@ examples/saved_embedidngs
 =4.2.0
 tough-times.ipynb
 .gitignore
+topicgpt-venv

@@ -1,5 +1,3 @@
-from openai import OpenAI
-
 import tiktoken
 from tqdm import tqdm
 import numpy as np
@@ -67,12 +65,11 @@ class GetEmbeddingsOpenAI:
             int: Total number of tokens needed to embed the corpus.
         """
 
-
         if self.tokenizer_str is None:
-             tokenizer = tiktoken.encoding_for_model(self.embedding_model)
+            tokenizer = tiktoken.encoding_for_model(self.embedding_model)
 
         else: 
-             tokenizer = tiktoken.get_encoding(self.tokenizer_str)
+            tokenizer = tiktoken.get_encoding(self.tokenizer_str)
 
         num_tokens = 0
         for document in tqdm(corpus):
@@ -167,7 +164,7 @@ class GetEmbeddingsOpenAI:
                         api_res_doc.append(
                             {"api_res": self.make_api_call(chunk), 
                             "error": None }
-                         )
+                            )
                         break
                     except Exception as e:
                             print(f"Error {e} occured for chunk {chunk_n} of document {i}")
@@ -178,7 +175,6 @@ class GetEmbeddingsOpenAI:
                                 api_res_doc.append(
                                     {"api_res": None, 
                                     "error": e })
-
 
             # average the embeddings of the chunks
             emb_lis = []
@@ -205,7 +201,6 @@ class GetEmbeddingsOpenAI:
         Returns:
             dict: A dictionary containing the embeddings as a matrix and the corpus as a list of strings.
         """
-
 
         embeddings = np.array([api_res["embedding"] for api_res in api_res_list])
         corpus = [api_res["text"] for api_res in api_res_list]
