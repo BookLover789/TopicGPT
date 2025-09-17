@@ -18,19 +18,20 @@ class Topic:
     class to represent a topic and all its attributes
     """
 
-    def __init__(self, 
-             topic_idx: str, 
-             documents: list[str], 
-             words: dict[str, int],
-             centroid_hd: np.ndarray = None, 
-             centroid_ld: np.ndarray = None,
-             document_embeddings_hd: np.ndarray = None,
-             document_embeddings_ld: np.ndarray = None,
-             document_embedding_similarity: np.ndarray = None,
-             umap_mapper: umap.UMAP = None,
-             top_words: dict[str, list[str]] = None,
-             top_word_scores: dict[str, list[float]] = None
-             ) -> None:
+    def __init__(
+            self, 
+            topic_idx: str, 
+            documents: list[str], 
+            words: dict[str, int],
+            centroid_hd: np.ndarray = None, 
+            centroid_ld: np.ndarray = None,
+            document_embeddings_hd: np.ndarray = None,
+            document_embeddings_ld: np.ndarray = None,
+            document_embedding_similarity: np.ndarray = None,
+            umap_mapper: umap.UMAP = None,
+            top_words: dict[str, list[str]] = None,
+            top_word_scores: dict[str, list[float]] = None
+            ) -> None:
         """
         Represents a topic and all its attributes.
 
@@ -49,7 +50,6 @@ class Topic:
         """
 
         # do some checks on the input
-
         assert len(documents) == len(document_embeddings_hd) == len(document_embeddings_ld) == len(document_embedding_similarity), "documents, document_embeddings_hd, document_embeddings_ld and document_embedding_similarity must have the same length"
         assert len(documents) > 0, "documents must not be empty"
         assert len(words) > 0, "words must not be empty"
@@ -163,7 +163,15 @@ def topic_lis_to_json(topics: list[Topic]) -> str:
     return json_object
 
 @staticmethod
-def extract_topics(corpus: list[str], document_embeddings: np.ndarray, clusterer: Clustering_and_DimRed, vocab_embeddings: np.ndarray, n_topwords: int = 2000, topword_extraction_methods: list[str] = ["tfidf", "cosine_similarity"], compute_vocab_hyperparams: dict = {}) -> list[Topic]:
+def extract_topics(
+        corpus: list[str], 
+        document_embeddings: np.ndarray, 
+        clusterer: Clustering_and_DimRed, 
+        vocab_embeddings: np.ndarray, 
+        n_topwords: int = 2000, 
+        topword_extraction_methods: list[str] = ["tfidf", "cosine_similarity"], 
+        compute_vocab_hyperparams: dict = {}
+        ) -> list[Topic]:
     """
     Extracts topics from the given corpus using the provided clusterer object on the document embeddings.
 
@@ -210,7 +218,7 @@ def extract_topics(corpus: list[str], document_embeddings: np.ndarray, clusterer
         tfidf_topwords, tfidf_dict = extractor.extract_topwords_tfidf(word_topic_mat = word_topic_mat, vocab = vocab, labels = labels, top_n_words = n_topwords)  # extract the top-words according to tfidf
     if "cosine_similarity" in topword_extraction_methods:
         cosine_topwords, cosine_dict = extractor.extract_topwords_centroid_similarity(word_topic_mat = word_topic_mat, vocab = vocab, vocab_embedding_dict = vocab_embeddings, centroid_dict= dim_red_centroid_dict, umap_mapper = umap_mapper, top_n_words = n_topwords, reduce_vocab_embeddings = True, reduce_centroid_embeddings = False, consider_outliers = False)
-                                                                                     
+    
     topics = []
     for i, label in enumerate(np.unique(labels)):
         if label < -0.5: # dont include outliers
@@ -252,13 +260,22 @@ def extract_topics(corpus: list[str], document_embeddings: np.ndarray, clusterer
                         top_words = top_words, 
                         top_word_scores = top_word_scores
                         )
-                      
+        
         topics.append(topic)
     
     return topics
 
 @staticmethod
-def extract_topics_no_new_vocab_computation(corpus: list[str], vocab: list[str], document_embeddings: np.ndarray, clusterer: Clustering_and_DimRed, vocab_embeddings: np.ndarray, n_topwords: int = 2000, topword_extraction_methods: list[str] = ["tfidf", "cosine_similarity"], consider_outliers: bool = False) -> list[Topic]:
+def extract_topics_no_new_vocab_computation(
+                        corpus: list[str], 
+                        vocab: list[str], 
+                        document_embeddings: np.ndarray, 
+                        clusterer: Clustering_and_DimRed, 
+                        vocab_embeddings: np.ndarray, 
+                        n_topwords: int = 2000, 
+                        topword_extraction_methods: list[str] = ["tfidf", "cosine_similarity"], 
+                        consider_outliers: bool = False
+                    ) -> list[Topic]:
     """
     Extracts topics from the given corpus using the provided clusterer object on the document embeddings. 
     This version does not compute the vocabulary of the corpus and instead uses the provided vocabulary.
@@ -277,7 +294,6 @@ def extract_topics_no_new_vocab_computation(corpus: list[str], vocab: list[str],
     Returns:
         list[Topic]: List of Topic objects representing the extracted topics.
     """
-
 
     for elem in topword_extraction_methods:
         if elem not in ["tfidf", "cosine_similarity"]:
@@ -298,6 +314,9 @@ def extract_topics_no_new_vocab_computation(corpus: list[str], vocab: list[str],
     centroid_arr = np.array(list(centroid_dict.values()))
     if centroid_arr.ndim == 1:
         centroid_arr = centroid_arr.reshape(-1, 1)
+    elif centroid_arr.size == 0:
+        raise ValueError("No centroids found. Clustering did not produce any clusters. Try tuning clustering parameters or check your embeddings.")
+
     dim_red_centroids = umap_mapper.transform(np.array(list(centroid_dict.values())))  # map the centroids to low dimensional space
 
     dim_red_centroid_dict = {label: centroid for label, centroid in zip(centroid_dict.keys(), dim_red_centroids)}
@@ -306,8 +325,17 @@ def extract_topics_no_new_vocab_computation(corpus: list[str], vocab: list[str],
     if "tfidf" in topword_extraction_methods:
         tfidf_topwords, tfidf_dict = extractor.extract_topwords_tfidf(word_topic_mat = word_topic_mat, vocab = vocab, labels = labels, top_n_words = n_topwords)  # extract the top-words according to tfidf
     if "cosine_similarity" in topword_extraction_methods:
-        cosine_topwords, cosine_dict = extractor.extract_topwords_centroid_similarity(word_topic_mat = word_topic_mat, vocab = vocab, vocab_embedding_dict = vocab_embeddings, centroid_dict= dim_red_centroid_dict, umap_mapper = umap_mapper, top_n_words = n_topwords, reduce_vocab_embeddings = True, reduce_centroid_embeddings = False, consider_outliers = True)
-                                                                                           
+        cosine_topwords, cosine_dict = extractor.extract_topwords_centroid_similarity(
+                                                                        word_topic_mat = word_topic_mat, 
+                                                                        vocab = vocab, 
+                                                                        vocab_embedding_dict = vocab_embeddings, 
+                                                                        centroid_dict= dim_red_centroid_dict, 
+                                                                        umap_mapper = umap_mapper, 
+                                                                        top_n_words = n_topwords, 
+                                                                        reduce_vocab_embeddings = True, 
+                                                                        reduce_centroid_embeddings = False, 
+                                                                        consider_outliers = True)
+
     topics = []
     for i, label in enumerate(np.unique(labels)):
         if label < -0.5: # dont include outliers
@@ -352,13 +380,23 @@ def extract_topics_no_new_vocab_computation(corpus: list[str], vocab: list[str],
                         top_words = top_words, 
                         top_word_scores = top_word_scores
                         )
-                      
         topics.append(topic)
     
     return topics
 
 @staticmethod
-def extract_and_describe_topics(corpus: list[str], document_embeddings: np.ndarray, clusterer: Clustering_and_DimRed, vocab_embeddings: np.ndarray, enhancer: TopwordEnhancement, n_topwords: int = 2000, n_topwords_description: int = 500, topword_extraction_methods: list[str] = ["tfidf", "cosine_similarity"], compute_vocab_hyperparams: dict = {}, topword_description_method: str = "cosine_similarity") -> list[Topic]:
+def extract_and_describe_topics(
+        corpus: list[str], 
+        document_embeddings: np.ndarray, 
+        clusterer: Clustering_and_DimRed, 
+        vocab_embeddings: np.ndarray, 
+        enhancer: TopwordEnhancement, 
+        n_topwords: int = 2000, 
+        n_topwords_description: int = 500, 
+        topword_extraction_methods: list[str] = ["tfidf", "cosine_similarity"], 
+        compute_vocab_hyperparams: dict = {}, 
+        topword_description_method: str = "cosine_similarity"
+    ) -> list[Topic]:
     """
     Extracts topics from the given corpus using the provided clusterer object on the document embeddings and describes/names them using the given enhancer object.
 
@@ -387,7 +425,17 @@ def extract_and_describe_topics(corpus: list[str], document_embeddings: np.ndarr
     return topics
 
 @staticmethod
-def extract_topics_labels_vocab(corpus: list[str], document_embeddings_hd: np.ndarray, document_embeddings_ld: np.ndarray, labels: np.ndarray, umap_mapper: umap.UMAP, vocab_embeddings: np.ndarray, vocab: list[str] = None, n_topwords: int = 2000, topword_extraction_methods: list[str] = ["tfidf", "cosine_similarity"]) -> list[Topic]:
+def extract_topics_labels_vocab(
+        corpus: list[str], 
+        document_embeddings_hd: np.ndarray, 
+        document_embeddings_ld: np.ndarray, 
+        labels: np.ndarray, 
+        umap_mapper: umap.UMAP, 
+        vocab_embeddings: np.ndarray, 
+        vocab: list[str] = None, 
+        n_topwords: int = 2000, 
+        topword_extraction_methods: list[str] = ["tfidf", "cosine_similarity"]
+    ) -> list[Topic]:
     """
     Extracts topics from the given corpus using the provided labels that indicate the topics (no -1 for outliers). Vocabulary is already computed.
 
@@ -433,7 +481,7 @@ def extract_topics_labels_vocab(corpus: list[str], document_embeddings_hd: np.nd
         tfidf_topwords, tfidf_dict = extractor.extract_topwords_tfidf(word_topic_mat = word_topic_mat, vocab = vocab, labels = labels, top_n_words = n_topwords)  # extract the top-words according to tfidf
     if "cosine_similarity" in topword_extraction_methods:
         cosine_topwords, cosine_dict = extractor.extract_topwords_centroid_similarity(word_topic_mat = word_topic_mat, vocab = vocab, vocab_embedding_dict = vocab_embeddings, centroid_dict= dim_red_centroid_dict, umap_mapper = umap_mapper, top_n_words = n_topwords, reduce_vocab_embeddings = True, reduce_centroid_embeddings = False, consider_outliers = False)
-                                                                                                 
+
     topics = []
     for i, label in enumerate(np.unique(labels)):
         if label < -0.5: # dont include outliers
@@ -474,7 +522,7 @@ def extract_topics_labels_vocab(corpus: list[str], document_embeddings_hd: np.nd
                         top_words = top_words, 
                         top_word_scores = top_word_scores
                         )
-                      
+
         topics.append(topic)
     
     return topics
@@ -618,10 +666,6 @@ def extract_and_describe_topic_cos_sim(
     topic = describe_and_name_topics([topic], enhancer, "cosine_similarity", n_topwords_description)[0]
     return topic
 
-    topic = extract_topic_cos_sim(documents_topic, document_embeddings_topic, words_topic, vocab_embeddings, umap_mapper, n_topwords)
-    topic = describe_and_name_topics([topic], enhancer, "cosine_similarity", n_topwords_description)[0]
-    return topic
-
 @staticmethod
 def describe_and_name_topics(
     topics: list[Topic],
@@ -644,7 +688,7 @@ def describe_and_name_topics(
 
     if topword_method not in ["tfidf", "cosine_similarity"]:
         raise ValueError("topword_method can only be 'tfidf' or 'cosine_similarity'")
-   
+
     for topic in tqdm(topics):
         tws = topic.top_words[topword_method]
         try: 

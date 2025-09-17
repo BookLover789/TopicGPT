@@ -151,6 +151,13 @@ class ExtractTopWords:
                 doc_frequency[word_lower].add(doc_id)
 
         total_words = sum(word_counter.values())
+        
+        # If no tokens survived the filtering, return an empty vocabulary early
+        if total_words == 0 or len(word_counter) == 0:
+            if verbose:
+                print("Warning: no tokens remained after preprocessing -> returning empty vocab.")
+            return []
+
         freq_counter = {word: count / total_words for word, count in word_counter.items()}
 
         # print most common words and their frequencies
@@ -230,6 +237,23 @@ class ExtractTopWords:
         res_dict = {}
         for word, emb in zip(vocab, result["embeddings"]):
             res_dict[word] = emb
+        return res_dict
+    
+    def embed_vocab(self, vocab: list[str], embedder=None) -> dict[str, np.ndarray]:
+        """
+        Embed the vocabulary using the specified embedding provider.
+
+        Args:
+            vocab (list[str]): List of words in the corpus sorted alphabetically.
+        """
+        assert vocab is not None and len(vocab) > 0, "Vocabulary is empty. Cannot embed an empty vocabulary."
+        vocab = sorted(list(set(vocab)))
+
+        result = embedder.get_embeddings(vocab)
+
+        res_dict = {}
+        for word, emb in zip(vocab, result["embeddings"]):
+            res_dict[word] = emb    
         return res_dict
     
     def compute_bow_representation(self, document: str, vocab: list[str], vocab_set: set[str]) -> np.ndarray:
@@ -413,7 +437,13 @@ class ExtractTopWords:
             np.ndarray: Cosine similarity of each word in the vocab to each centroid. Has shape (len(vocab), len(centroid_dict) - 1).
         """
 
-        similarity_mat = self.compute_embedding_similarity_centroids(vocab, vocab_embedding_dict, umap_mapper, centroid_dict, reduce_vocab_embeddings, reduce_centroid_embeddings)
+        similarity_mat = self.compute_embedding_similarity_centroids(
+                                                                vocab, 
+                                                                vocab_embedding_dict, 
+                                                                umap_mapper, 
+                                                                centroid_dict, 
+                                                                reduce_vocab_embeddings, 
+                                                                reduce_centroid_embeddings)
         top_words = {}
         top_word_scores = {}
         

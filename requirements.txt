@@ -14,3 +14,6 @@ tokenizers
 tqdm
 umap-learn
 umap-learn[plot]
+anthropic
+google-generativeai
+python-dotenv

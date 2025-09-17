@@ -8,9 +8,10 @@ from topicgpt.TopwordEnhancement import TopwordEnhancement
 from topicgpt.GetEmbeddingsOpenAI import GetEmbeddingsOpenAI
 from topicgpt.TopicPrompting import TopicPrompting
 from topicgpt.TopicRepresentation import Topic
-from topicgpt.Client import Client
 import topicgpt.TopicRepresentation as TopicRepresentation
-
+from topicgpt.clients import OpenAIClient
+from topicgpt.metrics.intruder_metrics import ADC
+from topicgpt.metrics.other_metrics import ADS
 
 embeddings_path= "SavedEmbeddings/embeddings.pkl" #global variable for the path to the embeddings
 
@@ -19,27 +20,29 @@ class TopicGPT:
     This is the main class for doing topic modelling with TopicGPT. 
     """
 
-    def __init__(self,
-             api_key: str = "",
-             azure_endpoint: dict = {},
-             n_topics: int = None,
-             openai_prompting_model: str = "gpt-3.5-turbo-16k",
-             max_number_of_tokens: int = 16384,
-             corpus_instruction: str = "",
-             document_embeddings: np.ndarray = None,
-             vocab_embeddings: dict[str, np.ndarray] = None,
-             embedding_model: str = "text-embedding-ada-002",
-             max_number_of_tokens_embedding: int = 8191,
-             use_saved_embeddings: bool = True,
-             path_saved_embeddings: str = embeddings_path,
-             clusterer: Clustering_and_DimRed = None,
-             n_topwords: int = 2000,
-             n_topwords_description: int = 500,
-             topword_extraction_methods: list[str] = ["tfidf", "cosine_similarity"],
-             compute_vocab_hyperparams: dict = {},
-             enhancer: TopwordEnhancement = None,
-             topic_prompting: TopicPrompting = None,
-             verbose: bool = True) -> None:
+    def __init__(
+            self,
+            api_key: str = "",
+            azure_endpoint: dict = {},
+            n_topics: int = None,
+            prompting_model: str = "gpt-3.5-turbo-16k",
+            max_number_of_tokens: int = 16384,
+            corpus_instruction: str = "",
+            document_embeddings: np.ndarray = None,
+            vocab_embeddings: dict[str, np.ndarray] = None,
+            embedding_model: str = "text-embedding-ada-002",
+            max_number_of_tokens_embedding: int = 8191,
+            use_saved_embeddings: bool = True,
+            path_saved_embeddings: str = embeddings_path,
+            clusterer: Clustering_and_DimRed = None,
+            n_topwords: int = 2000,
+            n_topwords_description: int = 500,
+            topword_extraction_methods: list[str] = ["tfidf", "cosine_similarity"],
+            compute_vocab_hyperparams: dict = {},
+            enhancer: TopwordEnhancement = None,
+            topic_prompting: TopicPrompting = None,
+            verbose: bool = True
+            ) -> None:
         
         """
         Initializes the main class for conducting topic modeling with TopicGPT.
@@ -47,7 +50,7 @@ class TopicGPT:
         Args:
             api_key (str): Your OpenAI API key. Obtain this key from https://beta.openai.com/account/api-keys.
             n_topics (int, optional): Number of topics to discover. If None, the Hdbscan algorithm (https://pypi.org/project/hdbscan/) is used to determine the number of topics automatically. Otherwise, agglomerative clustering is used. Note that with insufficient data, fewer topics may be found than specified.
-            openai_prompting_model (str, optional): Model provided by OpenAI for topic description and prompts. Refer to https://platform.openai.com/docs/models for available models.
+            prompting_model (str, optional): Model provided by OpenAI for topic description and prompts. Refer to https://platform.openai.com/docs/models for available models.
             max_number_of_tokens (int, optional): Maximum number of tokens to use for the OpenAI API.
             corpus_instruction (str, optional): Additional information about the corpus, if available, to benefit the model.
             document_embeddings (np.ndarray, optional): Document embeddings for the corpus. If None, they will be computed using the OpenAI API.
@@ -61,12 +64,10 @@ class TopicGPT:
             n_topwords_description (int, optional): Number of top words to provide to the LLM (Language Model) to describe the topic.
             topword_extraction_methods (list[str], optional): List of methods for extracting top words. Available methods include "tfidf", "cosine_similarity", and "topword_enhancement". Refer to the file 'ExtractTopWords/ExtractTopWords.py' for more details.
             compute_vocab_hyperparams (dict, optional): Hyperparameters for computing vocabulary embeddings. Refer to the file 'ExtractTopWords/ExtractTopWords.py' for more details.
-            enhancer (TopwordEnhancement, optional): Topword enhancement object. Used for describing topics. Find the class in the "TopwordEnhancement/TopwordEnhancement.py" folder. If None, a topword enhancement object with default parameters is used. If an openai model is specified here, it will overwrite the openai_prompting_model argument for topic description.
-            topic_prompting (TopicPrompting, optional): Topic prompting object for formulating prompts. Find the class in the "TopicPrompting/TopicPrompting.py" folder. If None, a topic prompting object with default parameters is used. If an openai model is specified here, it will overwrite the openai_prompting_model argument for topic description.
+            enhancer (TopwordEnhancement, optional): Topword enhancement object. Used for describing topics. Find the class in the "TopwordEnhancement/TopwordEnhancement.py" folder. If None, a topword enhancement object with default parameters is used. If an openai model is specified here, it will overwrite the prompting_model argument for topic description.
+            topic_prompting (TopicPrompting, optional): Topic prompting object for formulating prompts. Find the class in the "TopicPrompting/TopicPrompting.py" folder. If None, a topic prompting object with default parameters is used. If an openai model is specified here, it will overwrite the prompting_model argument for topic description.
             verbose (bool, optional): Whether to print detailed information about the process. This can be overridden by arguments in passed objects.
         """
-        
-
 
         # Do some checks on the input arguments
         assert api_key is not None, "You need to provide an OpenAI API key."
@@ -78,18 +79,15 @@ class TopicGPT:
         assert len(topword_extraction_methods) > 0, "You need to provide at least one topword extraction method."
         assert n_topwords_description <= n_topwords, "The number of top words for the topic description needs to be smaller or equal to the number of top words."
 
-        self.client = Client(api_key = api_key, azure_endpoint = azure_endpoint)
-
-
+        self.embedding_model = embedding_model
         self.n_topics = n_topics
-        self.openai_prompting_model = openai_prompting_model
+        self.prompting_model = prompting_model
         self.max_number_of_tokens = max_number_of_tokens
         self.corpus_instruction = corpus_instruction
         self.document_embeddings = document_embeddings
         self.vocab_embeddings = vocab_embeddings
-        self.embedding_model = embedding_model
         self.max_number_of_tokens_embedding = max_number_of_tokens_embedding
-        self.embedder = GetEmbeddingsOpenAI(client = self.client, embedding_model = self.embedding_model, max_tokens = self.max_number_of_tokens_embedding)
+        # self.embedder = GetEmbeddingsOpenAI(client = self.client, embedding_model = self.embedding_model, max_tokens = self.max_number_of_tokens_embedding)
         self.clusterer = clusterer
         self.n_topwords = n_topwords
         self.n_topwords_description = n_topwords_description
@@ -99,8 +97,41 @@ class TopicGPT:
         self.topic_prompting = topic_prompting	
         self.use_saved_embeddings = use_saved_embeddings
         self.verbose = verbose
+        self.vocab = None
+        self.topic_lis = None
+        self.corpus = None
 
         self.compute_vocab_hyperparams["verbose"] = self.verbose
+
+        # get the client basd on the model name
+        provider = detect_provider(prompting_model)
+        if provider == "openai":
+            self.client = OpenAIClient(api_key=api_key, azure_endpoint=azure_endpoint)
+            self.embedder = GetEmbeddingsOpenAI(
+                                client = self.client, 
+                                embedding_model = self.embedding_model, 
+                                max_tokens = self.max_number_of_tokens_embedding
+                                )
+        elif provider == "gemini":
+            from topicgpt.clients import GeminiClient
+            self.client = GeminiClient(api_key=api_key)
+            from topicgpt.GetEmbeddingsGemini import GetEmbeddingsGemini
+            self.embedder = GetEmbeddingsGemini(client = self.client, api_key=api_key)
+        elif provider == "anthropic":
+            from topicgpt.clients import AnthropicClient
+            self.client = AnthropicClient(api_key=api_key)
+            from topicgpt.GetEmbeddingsSentenceTransformer import GetEmbeddingsSentenceTransformer
+            try:
+                import torch
+                DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+            except ImportError:
+                DEVICE = "cpu"
+            self.embedder = GetEmbeddingsSentenceTransformer(
+                                model_name = self.embedding_model,
+                                device = DEVICE
+                                )
+        else:
+            raise ValueError(f"Unsupported provider: {provider}")
         
         # if embeddings have already been downloaded to the folder SavedEmbeddings, then load them
         if self.use_saved_embeddings and os.path.exists(path_saved_embeddings):
@@ -111,15 +142,32 @@ class TopicGPT:
             assert elem in ["tfidf", "cosine_similarity", "topword_enhancement"], "Invalid topword extraction method. Valid methods are 'tfidf', 'cosine_similarity', and 'topword_enhancement'."
         
         if clusterer is None:
-            self.clusterer = Clustering_and_DimRed(number_clusters_hdbscan = self.n_topics, verbose = self.verbose)
+            self.clusterer = Clustering_and_DimRed(
+                                number_clusters_hdbscan = self.n_topics, 
+                                verbose = self.verbose
+                                )
         else:
             self.n_topics = clusterer.number_clusters_hdbscan
         
         if enhancer is None:
-            self.enhancer = TopwordEnhancement(client = self.client, openai_model = self.openai_prompting_model, max_context_length = self.max_number_of_tokens, corpus_instruction = self.corpus_instruction)
+            self.enhancer = TopwordEnhancement(
+                                client = self.client, 
+                                model = self.prompting_model, 
+                                max_context_length = self.max_number_of_tokens, 
+                                corpus_instruction = self.corpus_instruction
+                                )
 
         if topic_prompting is None:
-            self.topic_prompting = TopicPrompting(topic_lis = [], client = self.client, openai_prompting_model = self.openai_prompting_model,  max_context_length_promting = 16000, enhancer = self.enhancer, openai_embedding_model = self.embedding_model, max_context_length_embedding = self.max_number_of_tokens_embedding, corpus_instruction = corpus_instruction)
+            self.topic_prompting = TopicPrompting(
+                                        topic_lis = [], 
+                                        client = self.client, 
+                                        openai_prompting_model = self.prompting_model,  
+                                        max_context_length_promting = 16000, 
+                                        enhancer = self.enhancer, 
+                                        openai_embedding_model = self.embedding_model, 
+                                        max_context_length_embedding = self.max_number_of_tokens_embedding, 
+                                        corpus_instruction = corpus_instruction
+                                        )
         
         self.extractor = ExtractTopWords()
     
@@ -127,7 +175,7 @@ class TopicGPT:
         repr = "TopicGPT object with the following parameters:\n"
         repr += "-"*150 + "\n"
         repr += "n_topics: " + str(self.n_topics) + "\n"
-        repr += "openai_prompting_model: " + self.openai_prompting_model + "\n"
+        repr += "prompting_model: " + self.prompting_model + "\n"
         repr += "max_number_of_tokens: " + str(self.max_number_of_tokens) + "\n"
         repr += "corpus_instruction: " + self.corpus_instruction + "\n"
         repr += "embedding_model: " + self.embedding_model + "\n"
@@ -154,10 +202,14 @@ class TopicGPT:
                 - vocab_embeddings (dict[str, np.ndarray]): Vocabulary embeddings for the corpus, provided as a dictionary where keys are words and values are embeddings.
         """
 
-        
         self.document_embeddings = self.embedder.get_embeddings(corpus)["embeddings"]
-
-        self.vocab_embeddings = self.extractor.embed_vocab_openAI(self.client, self.vocab, embedder = self.embedder)
+        if self.document_embeddings is None or len(self.document_embeddings) == 0:
+            raise ValueError("No document embeddings were computed. Check your embedding API and input data.")
+    
+        # self.vocab_embeddings = self.extractor.embed_vocab_openAI(self.client, self.vocab, embedder = self.embedder)
+        self.vocab_embeddings = self.extractor.embed_vocab(self.vocab, embedder=self.embedder)
+        if self.vocab_embeddings is None or len(self.vocab_embeddings) == 0:
+            raise ValueError("No vocabulary embeddings were computed. Check your embedding API and input data.")
 
         return self.document_embeddings, self.vocab_embeddings
     
@@ -173,7 +225,7 @@ class TopicGPT:
         """
 
         assert self.document_embeddings is not None and self.vocab_embeddings is not None, "You need to compute the embeddings first."
-
+        self.corpus = corpus
         if self.vocab is None: 
             self.vocab = self.extractor.compute_corpus_vocab(self.corpus, **self.compute_vocab_hyperparams)
         
@@ -200,7 +252,6 @@ class TopicGPT:
         Returns:
             list[Topic]: A list of Topic objects with names and descriptions.
         """
-
 
         assert self.topic_lis is not None, "You need to extract the topics first."
 
@@ -308,7 +359,7 @@ class TopicGPT:
         """
         Prints a string explanation of the topics.
         """
-   
+
         print(self.repr_topics())
 
     def prompt(self, query: str) -> tuple[str, object]:
@@ -349,7 +400,6 @@ class TopicGPT:
             object: The result of the function call if return_function_result is True, otherwise None.
         """
 
-
         answer, function_result = self.prompt(query)
 
         print(answer)
@@ -365,14 +415,60 @@ class TopicGPT:
             path (str, optional): The path to save the embeddings to. Defaults to embeddings_path.
         """
 
-
         assert self.document_embeddings is not None and self.vocab_embeddings is not None, "You need to compute the embeddings first."
 
         # create dictionary if it doesn't exist yet 
         if not os.path.exists("SavedEmbeddings"):
             os.makedirs("SavedEmbeddings")
 
-
         with open(path, "wb") as f:
             pickle.dump([self.document_embeddings, self.vocab_embeddings], f)
 
+
+    # score funtion
+    def score(
+            self,   
+            n_intruder_docs: int = 5, 
+            n_docs: int = 10
+    ):
+        assert self.topic_lis is not None, "You need to extract the topics first. (either by fitting the model or extracting_topics)"
+        self.n_intruder_docs = n_intruder_docs
+        self.n_docs = n_docs
+
+        adc = ADC(
+                    n_intruder_docs=self.n_intruder_docs, 
+                    n_docs=self.n_docs
+                )
+        adc_score = adc.score(
+                    topics=self.topic_lis, 
+                    new_embeddings=False
+                )
+        
+        ads = ADS()
+        ads_score = ads.score(
+                    topics=self.topic_lis, 
+                    tm=self
+                )
+
+        return dict(
+                Average_Document_Similarity = ads_score, 
+                Average_Document_Cohesion = adc_score
+                )
+    
+
+def detect_provider(model_name: str) -> str:
+    model_name = model_name.lower()
+    if "gpt" in model_name or "openai" in model_name:
+        return "openai"
+    elif (
+        "claude" in model_name
+        or "anthropic" in model_name
+        or "sonnet" in model_name
+        or "opus" in model_name
+        or "haiku" in model_name
+    ):
+        return "anthropic"
+    elif "gemini" in model_name or "google" in model_name:
+        return "gemini"
+    else:
+        raise ValueError(f"Unknown provider for model: {model_name}")

@@ -15,19 +15,21 @@ class Clustering_and_DimRed():
     """
     Class to perform dimensionality reduction with UMAP followed by clustering with HDBSCAN.
     """
-    def __init__(self,
-             n_dims_umap: int = 5,
-             n_neighbors_umap: int = 15,
-             min_dist_umap: float = 0,
-             metric_umap: str = "cosine",
-             min_cluster_size_hdbscan: int = 30,
-             metric_hdbscan: str = "euclidean",
-             cluster_selection_method_hdbscan: str = "eom",
-             number_clusters_hdbscan: int = None,
-             random_state: int = 42,
-             verbose: bool = True,
-             UMAP_hyperparams: dict = {},
-             HDBSCAN_hyperparams: dict = {}) -> None:
+    def __init__(
+            self,
+            n_dims_umap: int = 5,
+            n_neighbors_umap: int = 15,
+            min_dist_umap: float = 0,
+            metric_umap: str = "cosine",
+            min_cluster_size_hdbscan: int = 30,
+            metric_hdbscan: str = "euclidean",
+            cluster_selection_method_hdbscan: str = "eom",
+            number_clusters_hdbscan: int = None,
+            random_state: int = 42,
+            verbose: bool = True,
+            UMAP_hyperparams: dict = {},
+            HDBSCAN_hyperparams: dict = {}
+        ) -> None:
         """
         Initializes the clustering and dimensionality reduction parameters for topic modeling.
 
@@ -230,20 +232,19 @@ class Clustering_and_DimRed():
 
         # make plot quadratic
         fig.update_layout(
-        autosize=False,
-        width=1500,
-        height=1500,
-        margin=dict(
-            l=50,   
-            r=50,
-            b=100,
-            t=100,
-            pad=4
-        )
+            autosize=False,
+            width=1500,
+            height=1500,
+            margin=dict(
+                l=50,   
+                r=50,
+                b=100,
+                t=100,
+                pad=4
+            )
         )
         # set title 
         fig.update_layout(title_text='UMAP projection of the document embeddings', title_x=0.5)
-
         
         # show plot
         fig.show()
