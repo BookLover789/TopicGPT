@@ -1,4 +1,5 @@
 from ..Client import Client
+import google.generativeai as genai
 
 class GeminiClient(Client):
     def __init__(self, api_key: str) -> None:
@@ -7,21 +8,24 @@ class GeminiClient(Client):
         self.initialize_client()
 
     def initialize_client(self):
-        import google.generativeai as genai
         self.client = genai.configure(api_key=self.api_key)
         # Safety check: try a minimal chat completion
         test_messages = [{"role": "user", "content": "ping"}]
         # Use chat_completion to check API key/quota
-        self.chat_completion(test_messages, model="gemini-pro")
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        self.chat_completion(test_messages, model=model)
 
     def chat_completion(self, messages, model=None, temperature=0.5, **kwargs):
         # Gemini expects a single prompt string, not a list of messages
         prompt = "\n".join(m['content'] for m in messages)
         if model is None:
-            model = "gemini-pro"
+            model_obj = genai.GenerativeModel("gemini-1.5-flash")
+        elif isinstance(model, str): # if model is a string, convert to GenerativeModel
+            model_obj = genai.GenerativeModel(model)
+        else:
+            model_obj = model  # Already a GenerativeModel instance
         try:
-            model_obj = self.client.GenerativeModel(model)
-            return model_obj.generate_content(prompt, temperature=temperature, **kwargs)
+            return model_obj.generate_content(prompt, **kwargs)
         except Exception as e:
             raise RuntimeError(f"Gemini API error: {e}")
 
