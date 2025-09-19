@@ -13,7 +13,7 @@ class GetEmbeddingsGemini:
             embedding_model: str = "gemini-embedding-001",
             output_dimensionality: int = 1536
         ) -> None:
-        from google.genai import types
+        from google.generativeai import types
         self.api_key = api_key
         self.embedding_model = embedding_model
         self.output_dimensionality = output_dimensionality
