@@ -1,0 +1,91 @@
+<mxfile>
+  <diagram id="1" name="国企混改协同网">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <!-- 核心节点：混合所有制改革 -->
+        <mxCell id="2" value="&lt;b&gt;混合所有制改革&lt;/b&gt;" style="ellipse;fillColor:#9370DB;strokeColor:#6A5ACD;strokeWidth:2;fontSize:14;fillColor2:#E6E6FA" vertex="1" parent="1">
+          <mxGeometry x="300" y="200" width="150" height="80" as="geometry"/>
+        </mxCell>
+        <!-- 治理维度节点 -->
+        <mxCell id="3" value="股权结构" style="rectangle;fillColor:#87CEEB;strokeColor:#4682B4;fontSize:12" vertex="1" parent="1">
+          <mxGeometry x="150" y="100" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="4" value="董事会治理" style="rectangle;fillColor:#87CEEB;strokeColor:#4682B4;fontSize:12" vertex="1" parent="1">
+          <mxGeometry x="150" y="200" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <!-- 资本维度节点 -->
+        <mxCell id="5" value="并购重组" style="rectangle;fillColor:#98FB98;strokeColor:#32CD32;fontSize:12" vertex="1" parent="1">
+          <mxGeometry x="150" y="300" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="6" value="员工持股" style="rectangle;fillColor:#98FB98;strokeColor:#32CD32;fontSize:12" vertex="1" parent="1">
+          <mxGeometry x="150" y="380" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <!-- 人才维度节点 -->
+        <mxCell id="7" value="差异化激励" style="rectangle;fillColor:#FFB6C1;strokeColor:#DC143C;fontSize:12" vertex="1" parent="1">
+          <mxGeometry x="450" y="100" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="8" value="薪酬改革" style="rectangle;fillColor:#FFB6C1;strokeColor:#DC143C;fontSize:12" vertex="1" parent="1">
+          <mxGeometry x="450" y="200" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <!-- 责任维度节点 -->
+        <mxCell id="9" value="ESG" style="rectangle;fillColor:#F0E68C;strokeColor:#FFD700;fontSize:12" vertex="1" parent="1">
+          <mxGeometry x="450" y="300" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="10" value="精准扶贫" style="rectangle;fillColor:#F0E68C;strokeColor:#FFD700;fontSize:12" vertex="1" parent="1">
+          <mxGeometry x="450" y="380" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <!-- 边（关联链路） -->
+        <mxCell id="11" value="核心关联" style="edge;strokeColor:#6A5ACD;strokeWidth:2;fontSize:10" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300" y="200" as="source"/>
+            <mxPoint x="150" y="100" as="target"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="12" value="核心关联" style="edge;strokeColor:#6A5ACD;strokeWidth:2;fontSize:10" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300" y="200" as="source"/>
+            <mxPoint x="150" y="200" as="target"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="13" value="支撑关联" style="edge;strokeColor:#32CD32;strokeWidth:1.5;fontSize:10" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300" y="200" as="source"/>
+            <mxPoint x="150" y="300" as="target"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="14" value="支撑关联" style="edge;strokeColor:#32CD32;strokeWidth:1.5;fontSize:10" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300" y="200" as="source"/>
+            <mxPoint x="150" y="380" as="target"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="15" value="保障关联" style="edge;strokeColor:#DC143C;strokeWidth:1.5;fontSize:10" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300" y="200" as="source"/>
+            <mxPoint x="450" y="100" as="target"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="16" value="保障关联" style="edge;strokeColor:#DC143C;strokeWidth:1.5;fontSize:10" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300" y="200" as="source"/>
+            <mxPoint x="450" y="200" as="target"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="17" value="增值关联" style="edge;strokeColor:#FFD700;strokeWidth:1;fontSize:10" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300" y="200" as="source"/>
+            <mxPoint x="450" y="300" as="target"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="18" value="增值关联" style="edge;strokeColor:#FFD700;strokeWidth:1;fontSize:10" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300" y="200" as="source"/>
+            <mxPoint x="450" y="380" as="target"/>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
